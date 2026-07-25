@@ -18,15 +18,17 @@ export class UserRepository extends JsonRepository<UserProfile> {
       throw new Error(`[UserRepository] Users directory not found at ${USERS_DIR}`);
     }
 
-    const files = fs.readdirSync(USERS_DIR).filter(f => f.endsWith('.json'));
+    const directories = fs.readdirSync(USERS_DIR, { withFileTypes: true })
+      .filter(dirent => dirent.isDirectory())
+      .map(dirent => dirent.name);
 
-    for (const file of files) {
-      const filePath = path.join(USERS_DIR, file);
-      const rawData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-      
-      // Strict Zod validation
-      const validUser = this.schema.parse(rawData);
-      this.items.set(validUser.id, validUser);
+    for (const userId of directories) {
+      const profilePath = path.join(USERS_DIR, userId, 'profile.json');
+      if (fs.existsSync(profilePath)) {
+        const rawData = JSON.parse(fs.readFileSync(profilePath, 'utf-8'));
+        const validUser = this.schema.parse(rawData);
+        this.items.set(validUser.id, validUser);
+      }
     }
 
     this.initialized = true;

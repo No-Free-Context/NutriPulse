@@ -29,13 +29,20 @@
       "fat_pct": 20
     }
   },
-  "goals": ["Athletic performance", "Maintain vitamin D"],
+  "goals": [
+    "Athletic performance",
+    "Maintain vitamin D"
+  ],
   "taste_preferences": {
-    "cuisines_liked": ["Healthy Bowls & Salads", "Continental"],
+    "cuisines_liked": [
+      "Healthy Bowls & Salads",
+      "Continental"
+    ],
     "cuisines_disliked": [],
     "spice_tolerance": "mild",
-    "texture_preferences": ["crunchy", "crispy"]
-  },
-  "order_history": [],
-  "meal_feedback": []
+    "texture_preferences": [
+      "crunchy",
+      "crispy"
+    ]
+  }
 }

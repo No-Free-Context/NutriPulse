@@ -1,0 +1,14 @@
+[
+  {
+    "user_id": "u1",
+    "timestamp": "2026-07-25T20:58:21.072Z",
+    "dish_id": "d001",
+    "portion_multiplier": 1
+  },
+  {
+    "user_id": "u1",
+    "timestamp": "2026-07-25T20:58:21.072Z",
+    "dish_id": "d002",
+    "portion_multiplier": 1
+  }
+]

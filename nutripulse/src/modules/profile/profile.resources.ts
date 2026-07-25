@@ -1,22 +1,49 @@
 import { ResourceDecorator as Resource, ExecutionContext } from '@nitrostack/core';
+import { UserRepository } from '../../data/repositories/user-repository.js';
+import path from 'path';
+import fs from 'fs';
 
 /**
- * profile Resources
- * 
- * TODO: Add description
+ * Profile Resources
  */
 export class profileResources {
+  
+  private userRepo = new UserRepository();
+
   @Resource({
-    uri: 'profile://example',
-    name: 'Example Resource',
-    description: 'TODO: Add description',
+    uri: 'profile://{userId}',
+    name: 'User Profile',
+    description: 'Read this resource to understand the user\'s medical conditions, allergies, diet plan, and taste preferences. Crucial for any nutritional planning.',
     mimeType: 'application/json',
   })
-  async exampleResource(context: ExecutionContext) {
-    // TODO: Implement resource logic
+  async getProfile(context: ExecutionContext) {
+    const uri = String(context.metadata?.uri || '');
+    const userId = uri.split('://')[1];
+
+    if (!userId) {
+      throw new Error("Missing userId in URI");
+    }
+
+    const user = this.userRepo.getById(userId);
+    if (!user) {
+      throw new Error(`User not found: ${userId}`);
+    }
+
+    const profilePath = path.join(process.cwd(), 'data', 'users', userId, 'profile.json');
+    const stat = fs.existsSync(profilePath) ? fs.statSync(profilePath) : null;
+
     return {
-      type: 'text' as const,
-      text: JSON.stringify({ example: 'data' }, null, 2),
+      contents: [{
+        uri,
+        mimeType: 'application/json',
+        text: JSON.stringify(user, null, 2)
+      }],
+      annotations: {
+        audience: ['any'],
+        priority: 1
+      },
+      lastModified: stat ? stat.mtimeMs : undefined
     };
   }
 }
+

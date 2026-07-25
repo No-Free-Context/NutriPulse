@@ -1,4 +1,5 @@
 import { McpApp, Module, ConfigModule } from '@nitrostack/core';
+import { CoreModule } from './core/core.module.js';
 import { profileModule } from './modules/profile/profile.module.js';
 import { clinicalModule } from './modules/clinical/clinical.module.js';
 import { telemetryModule } from './modules/telemetry/telemetry.module.js';
@@ -25,6 +26,7 @@ import { SystemHealthCheck } from './health/system.health.js';
   description: 'Root application module',
   imports: [
     ConfigModule.forRoot(),
+    CoreModule,
     profileModule,
     clinicalModule,
     telemetryModule,

@@ -7,7 +7,10 @@
     "weight_kg": 85,
     "activity_level": "moderate"
   },
-  "chronic_conditions": ["Diabetes T2", "Hypertension"],
+  "chronic_conditions": [
+    "Diabetes T2",
+    "Hypertension"
+  ],
   "allergies": [],
   "medications": [],
   "diet_plan": {
@@ -19,13 +22,21 @@
       "fat_pct": 30
     }
   },
-  "goals": ["Manage blood sugar", "Lower blood pressure", "Increase iron"],
+  "goals": [
+    "Manage blood sugar",
+    "Lower blood pressure",
+    "Increase iron"
+  ],
   "taste_preferences": {
-    "cuisines_liked": ["North Indian / Mughlai", "South Indian"],
+    "cuisines_liked": [
+      "North Indian / Mughlai",
+      "South Indian"
+    ],
     "cuisines_disliked": [],
     "spice_tolerance": "medium",
-    "texture_preferences": ["fluffy", "tender"]
-  },
-  "order_history": [],
-  "meal_feedback": []
+    "texture_preferences": [
+      "fluffy",
+      "tender"
+    ]
+  }
 }

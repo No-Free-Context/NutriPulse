@@ -14,7 +14,7 @@
     "widget": "npm --prefix src/widgets",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "seed": "tsx src/data/build-catalog.ts"
+    "seed": "tsx src/data/build-catalog.ts && tsx src/data/build-users.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/ext-apps": ">=0.1.0",

@@ -1,5 +1,24 @@
 import { z } from 'zod';
 
+export const MealFeedbackSchema = z.object({
+  id: z.string(),
+  order_id: z.string(),
+  rating: z.number().min(1).max(5),
+  liked: z.boolean(),
+  comments: z.string(),
+});
+export type MealFeedback = z.infer<typeof MealFeedbackSchema>;
+
+export const OrderSchema = z.object({
+  id: z.string(),
+  user_id: z.string(),
+  timestamp: z.string(),
+  dish_id: z.string(),
+  price_inr: z.number(),
+  meal_slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+});
+export type Order = z.infer<typeof OrderSchema>;
+
 export const UserProfileSchema = z.object({
   id: z.string(),
   demographics: z.object({
@@ -34,10 +53,9 @@ export const UserProfileSchema = z.object({
     spice_tolerance: z.enum(['none', 'mild', 'medium', 'high']),
     texture_preferences: z.array(z.string()),
   }),
-  order_history: z.array(z.string()),
-  meal_feedback: z.array(z.any()), // Can be refined later based on structure
 });
 export type UserProfile = z.infer<typeof UserProfileSchema>;
+
 
 export const LabReportSchema = z.object({
   user_id: z.string(),

@@ -72,7 +72,7 @@ export async function fetchUSDANutrition(query: string, apiKey: string) {
     if (!res.ok) {
       throw new Error(`USDA API failed with status ${res.status}`);
     }
-    const data = await res.json();
+    const data = await res.json() as any;
     if (data.foods && data.foods.length > 0) {
       const food = data.foods[0];
       const result = {

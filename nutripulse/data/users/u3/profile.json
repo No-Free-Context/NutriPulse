@@ -7,7 +7,10 @@
     "weight_kg": 90,
     "activity_level": "sedentary"
   },
-  "chronic_conditions": ["CKD", "Dyslipidemia"],
+  "chronic_conditions": [
+    "CKD",
+    "Dyslipidemia"
+  ],
   "allergies": [],
   "medications": [],
   "diet_plan": {
@@ -19,13 +22,20 @@
       "fat_pct": 30
     }
   },
-  "goals": ["Kidney health", "Lower cholesterol"],
+  "goals": [
+    "Kidney health",
+    "Lower cholesterol"
+  ],
   "taste_preferences": {
-    "cuisines_liked": ["South Indian", "Chinese-Indian"],
+    "cuisines_liked": [
+      "South Indian",
+      "Chinese-Indian"
+    ],
     "cuisines_disliked": [],
     "spice_tolerance": "none",
-    "texture_preferences": ["soft", "creamy"]
-  },
-  "order_history": [],
-  "meal_feedback": []
+    "texture_preferences": [
+      "soft",
+      "creamy"
+    ]
+  }
 }
