@@ -541,6 +541,37 @@ export class clinicalTools {
     input: { userId: string; dish_ids: string[]; meal_slot?: string },
     context: ExecutionContext
   ) {
+    // Robust normalisation for UI quirks (e.g. if the UI shatters strings into char arrays)
+    let rawIds = input.dish_ids;
+    if (Array.isArray(rawIds) && rawIds.length > 0 && rawIds.every(s => s.length === 1)) {
+      // Reassemble shattered character array
+      const reassembled = rawIds.join('');
+      // Check if it looks like JSON array
+      if (reassembled.startsWith('[') && reassembled.endsWith(']')) {
+        try {
+          rawIds = JSON.parse(reassembled);
+        } catch {
+          rawIds = reassembled.replace(/[\[\]"']/g, '').split(',').map(s => s.trim()) as unknown as string[];
+        }
+      } else {
+        // Just split by comma
+        rawIds = reassembled.split(',').map(s => s.trim()) as unknown as string[];
+      }
+    } else if (typeof rawIds === 'string') {
+      try {
+        rawIds = JSON.parse(rawIds as unknown as string);
+      } catch {
+        rawIds = (rawIds as unknown as string).split(',').map(s => s.trim()) as unknown as string[];
+      }
+    }
+    
+    if (!Array.isArray(rawIds)) {
+      rawIds = [rawIds];
+    }
+    
+    // Replace the input array with the cleaned one
+    input.dish_ids = rawIds.filter(Boolean);
+
     const profile = this.userRepo.getById(input.userId);
     if (!profile) throw new Error(`User not found: ${input.userId}`);
 
