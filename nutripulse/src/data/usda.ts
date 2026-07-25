@@ -61,7 +61,7 @@ export function extractNutritionPer100g(nutrients: any[]) {
 }
 
 export async function fetchUSDANutrition(query: string, apiKey: string) {
-  if (cache[query]) {
+  if (query in cache) {
     return cache[query];
   }
 

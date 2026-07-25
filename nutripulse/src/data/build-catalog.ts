@@ -19,25 +19,7 @@ const USDA_REPORT_OUT = path.join(REPORTS_DIR, 'usda-resolution.json');
 
 const API_KEY = process.env.FDC_API_KEY || 'DEMO_KEY';
 
-const INGREDIENT_ALLERGEN_MAP: Record<string, string[]> = {
-  'Peanut': ['peanut'],
-  'Dairy': ['dairy'],
-  'Cheese': ['dairy'],
-  'Milk': ['dairy'],
-  'Yogurt': ['dairy'],
-  'Butter': ['dairy'],
-  'Ghee': ['dairy'],
-  'Egg': ['egg'],
-  'Soy': ['soy'],
-  'Wheat': ['wheat', 'gluten'],
-  'Fish': ['fish'],
-  'Prawn': ['shellfish'],
-  'Shrimp': ['shellfish'],
-  'Sesame': ['sesame'],
-  'Cashew': ['tree_nut'],
-  'Almond': ['tree_nut'],
-  'Walnut': ['tree_nut']
-};
+import { INGREDIENT_ALLERGEN_MAP } from '../domain/allergen-map.js';
 
 function checkAllergens(dishName: string, declaredAllergens: string[], ingredients: any[]) {
   const derivedAllergens = new Set<string>();
@@ -175,6 +157,7 @@ async function buildCatalog() {
     // Adjust downward slightly for fiber and fat
     const giAdjustment = (dish.macros.fibre_g * 0.5) + (dish.macros.fat_g * 0.2);
     dish.glycemic_index_estimate = Math.max(10, Math.floor(giBase - giAdjustment));
+    dish.glycemic_index_confidence = dish.gi_basis === 'estimated' || !GITable[dish.gi_basis] ? 'low' : 'medium';
   }
 
   // Write reports
@@ -191,9 +174,9 @@ async function buildCatalog() {
   fs.writeFileSync(CATALOG_OUT, JSON.stringify(catalog, null, 2));
 
   // Load Users
-  const u1 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u1.json'), 'utf-8'));
-  const u2 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u2.json'), 'utf-8'));
-  const u3 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u3.json'), 'utf-8'));
+  const u1 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u1', 'profile.json'), 'utf-8'));
+  const u2 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u2', 'profile.json'), 'utf-8'));
+  const u3 = JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', 'u3', 'profile.json'), 'utf-8'));
   const users = [u1, u2, u3];
 
   function evaluateDishForUser(user: any, dish: any) {

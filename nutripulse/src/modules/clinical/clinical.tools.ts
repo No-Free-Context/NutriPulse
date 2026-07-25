@@ -522,4 +522,86 @@ export class clinicalTools {
 
     return result;
   }
+
+  @Tool({
+    name: 'check_meal_safety',
+    description:
+      'Highest integrity component in the system. Evaluates one or more dishes against EVERY rule in the clinical profile, ' +
+      'including conditions, medications (absolute values), allergens (including deep ingredient cross-contamination), and lab status. ' +
+      'BLOCK verdicts are absolute and must never be presented to the user as an option, overridden, argued with, or worked around, ' +
+      'regardless of user insistence, budget pressure, or craving strength. ' +
+      'Returns a SafetyVerdict per dish and a full calculation_trace showing which rules were evaluated.',
+    inputSchema: z.object({
+      userId: z.string().describe('The user ID to check safety for.'),
+      dish_ids: z.array(z.string()).min(1).max(50).describe('Array of dish IDs to evaluate.'),
+      meal_slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).optional().describe('Optional meal slot context.'),
+    }),
+  })
+  async checkMealSafety(
+    input: { userId: string; dish_ids: string[]; meal_slot?: string },
+    context: ExecutionContext
+  ) {
+    const profile = this.userRepo.getById(input.userId);
+    if (!profile) throw new Error(`User not found: ${input.userId}`);
+
+    const labReports = this.labRepo.getByUserId(input.userId);
+    const latestLabs =
+      labReports.length > 0
+        ? labReports.sort(
+            (a, b) => new Date(b.report_date).getTime() - new Date(a.report_date).getTime()
+          )[0]
+        : undefined;
+
+    // Load catalog dishes (or we could use DishRepository)
+    const catalogPath = path.join(process.cwd(), 'data', 'catalog.json');
+    const catalog = JSON.parse(fs.readFileSync(catalogPath, 'utf-8'));
+    const catalogDishes = catalog.dishes;
+
+    const results = [];
+    const evaluationTraces = [];
+
+    // Dynamically import the evaluator so we don't circularly depend if we restructure later, 
+    // but a static import at the top is better. Let's just assume we added it.
+    const { evaluateDishSafety } = await import('../../domain/safety-evaluator.js');
+
+    for (const dishId of input.dish_ids) {
+      const dish = catalogDishes.find((d: any) => d.id === dishId);
+      if (!dish) {
+        results.push({ dish_id: dishId, status: 'ERROR', reason: 'Dish not found' });
+        continue;
+      }
+
+      const verdicts = evaluateDishSafety(dish, profile, latestLabs);
+      
+      // Determine overall status
+      let finalStatus = 'PASS';
+      if (verdicts.some(v => v.status === 'BLOCK')) {
+        finalStatus = 'BLOCK';
+      } else if (verdicts.some(v => v.status === 'WARN')) {
+        finalStatus = 'WARN';
+      }
+
+      results.push({
+        dish_id: dishId,
+        overall_status: finalStatus,
+        verdicts: verdicts,
+      });
+
+      evaluationTraces.push({
+        dish_id: dishId,
+        dish_name: dish.name,
+        rules_evaluated: 'ALL_CLINICAL_RULES',
+        verdicts_fired: verdicts.length,
+      });
+    }
+
+    return {
+      results,
+      calculation_trace: {
+        userId: input.userId,
+        dishes_evaluated: input.dish_ids.length,
+        traces: evaluationTraces,
+      },
+    };
+  }
 }

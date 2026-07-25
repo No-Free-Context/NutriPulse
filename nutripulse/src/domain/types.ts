@@ -105,6 +105,7 @@ export const DishSchema = z.object({
   description: z.string(),
   price_inr: z.number(),
   rating: z.number(),
+  veg: z.boolean().nullish(),
   prep_style: z.enum(['fried', 'grilled', 'steamed', 'raw', 'baked', 'curry', 'roasted']),
   flavour_profile: z.object({
     sweet: z.number().min(0).max(1),
@@ -115,6 +116,17 @@ export const DishSchema = z.object({
     fat: z.number().min(0).max(1),
   }),
   texture_tags: z.array(z.string()),
+  ingredients: z.array(z.object({
+    name: z.string(),
+    usda_query: z.string(),
+    grams: z.number(),
+  })).nullish(),
+  added_salt_g: z.number().nullish(),
+  cooking_fat: z.object({
+    name: z.string().nullish(),
+    usda_query: z.string(),
+    grams: z.number(),
+  }).nullish(),
   serving_size_g: z.number(),
   macros: z.object({
     protein_g: z.number(),
@@ -133,9 +145,13 @@ export const DishSchema = z.object({
     vitamin_k_ug: z.number(),
   }),
   kcal: z.number(),
+  gi_basis: z.string().nullish(),
   glycemic_index_estimate: z.number(),
+  glycemic_index_confidence: z.enum(['low', 'medium', 'high']).nullish(),
   allergens: z.array(z.string()),
   usda_source_ids: z.array(z.string()),
+  swap_for: z.string().nullish(),
+  conflict_role: z.string().nullish(),
 });
 export type Dish = z.infer<typeof DishSchema>;
 

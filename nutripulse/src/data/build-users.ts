@@ -283,19 +283,15 @@ function buildIntake(userId: string) {
 }
 
 function main() {
-  const users = ['u1', 'u2', 'u3'];
+  const users = ['u1', 'u2', 'u3'].map(id => 
+    JSON.parse(fs.readFileSync(path.join(DATA_DIR, 'users', id, 'profile.json'), 'utf-8'))
+  );
   const audit: any = {};
   
-  // Read existing u1, u2, u3 from data/users directly
-  const profiles = users.map(u => {
-    const fPath = path.join(USERS_DIR, `${u}.json`);
-    return JSON.parse(fs.readFileSync(fPath, 'utf-8'));
-  });
-
   // Ensure runtime exists
   if (!fs.existsSync(RUNTIME_DIR)) fs.mkdirSync(RUNTIME_DIR, { recursive: true });
 
-  for (const profile of profiles) {
+  for (const profile of users) {
     const uid = profile.id;
     const userDir = path.join(USERS_DIR, uid);
     if (!fs.existsSync(userDir)) fs.mkdirSync(userDir, { recursive: true });
