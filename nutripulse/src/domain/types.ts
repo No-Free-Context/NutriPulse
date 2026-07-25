@@ -87,7 +87,7 @@ export const DishSchema = z.object({
   description: z.string(),
   price_inr: z.number(),
   rating: z.number(),
-  prep_style: z.enum(['fried', 'grilled', 'steamed', 'raw', 'baked', 'curry']),
+  prep_style: z.enum(['fried', 'grilled', 'steamed', 'raw', 'baked', 'curry', 'roasted']),
   flavour_profile: z.object({
     sweet: z.number().min(0).max(1),
     salty: z.number().min(0).max(1),
