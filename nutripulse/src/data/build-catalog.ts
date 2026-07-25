@@ -205,7 +205,7 @@ async function buildCatalog() {
     }
     
     // Evaluate constraints (budget)
-    const budget = user.id === 'u1' ? 400 : user.id === 'u3' ? 250 : 9999;
+    const budget = user.daily_budget_inr || 9999;
     if (dish.price_inr > budget) {
       verdicts.push({ status: 'BLOCK', reason: 'Over budget' });
     }

@@ -2,6 +2,7 @@ import { ResourceDecorator as Resource, ExecutionContext } from '@nitrostack/cor
 import { IntakeRepository } from '../../data/repositories/intake-repository.js';
 import { UserRepository } from '../../data/repositories/user-repository.js';
 import { HistoryRepository } from '../../data/repositories/history-repository.js';
+import { BudgetRepository } from '../../data/repositories/budget-repository.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -10,6 +11,7 @@ export class contextResources {
   private intakeRepo = new IntakeRepository();
   private userRepo = new UserRepository();
   private historyRepo = new HistoryRepository();
+  private budgetRepo = new BudgetRepository();
 
   @Resource({
     uri: 'intake://{userId}/today',
@@ -103,32 +105,7 @@ export class contextResources {
 
     if (!userId) throw new Error("Missing userId in URI");
     
-    const history = this.historyRepo.getByUserId(userId);
-    
-    // Simplification for demo: daily cap based on user
-    const dailyCap = userId === 'u1' ? 400 : userId === 'u3' ? 250 : 600;
-    const weeklyCap = dailyCap * 7;
-    
-    // Sum spend from last 7 days in history
-    let spendToDate = 0;
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    
-    for (const order of history.orders) {
-      if (new Date(order.timestamp) >= sevenDaysAgo) {
-        spendToDate += order.price_inr;
-      }
-    }
-    
-    const remaining = weeklyCap - spendToDate;
-    
-    const data = {
-      daily_cap: dailyCap,
-      weekly_cap: weeklyCap,
-      spend_to_date: spendToDate,
-      remaining: remaining,
-      days_left_in_week: 3 // Hardcoded demo value
-    };
+    const data = this.budgetRepo.getBudgetState(userId);
 
     return {
       contents: [{

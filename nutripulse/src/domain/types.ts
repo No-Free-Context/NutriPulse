@@ -21,6 +21,7 @@ export type Order = z.infer<typeof OrderSchema>;
 
 export const UserProfileSchema = z.object({
   id: z.string(),
+  daily_budget_inr: z.number().optional(),
   demographics: z.object({
     age: z.number(),
     sex: z.enum(['M', 'F', 'O']),
