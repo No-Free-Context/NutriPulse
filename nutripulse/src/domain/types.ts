@@ -9,6 +9,8 @@ export const MealFeedbackSchema = z.object({
 });
 export type MealFeedback = z.infer<typeof MealFeedbackSchema>;
 
+
+
 export const OrderSchema = z.object({
   id: z.string(),
   user_id: z.string(),
@@ -209,6 +211,8 @@ export const SafetyVerdictSchema = z.object({
   rule_id: z.string().optional(),
   rule_text: z.string().optional(),
   severity: z.enum(['none', 'mild', 'moderate', 'severe', 'critical']),
+  actual_value: z.number().optional(),
+  threshold: z.number().optional(),
 });
 export type SafetyVerdict = z.infer<typeof SafetyVerdictSchema>;
 

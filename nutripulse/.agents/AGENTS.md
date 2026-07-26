@@ -1,0 +1,2 @@
+- Never fabricate mock data to make a test pass; vary the data through repository fixtures.
+- Never default missing values to zero in safety paths; FAIL CLOSED on missing data.

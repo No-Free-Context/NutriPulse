@@ -25,6 +25,7 @@ export const ClinicalRuleSchema = z.object({
   verdict: z.enum(['WARN', 'BLOCK']),
   human_readable_text: z.string(),
   source_citation: z.string(),
+  scope: z.enum(['daily', 'per_meal']).optional()
 });
 export type ClinicalRule = z.infer<typeof ClinicalRuleSchema>;
 
@@ -37,7 +38,8 @@ export const clinicalRules: ClinicalRule[] = [
     severity: 'severe',
     verdict: 'BLOCK',
     human_readable_text: 'Strict sugar cap for Type 2 Diabetes.',
-    source_citation: 'ADA Guidelines 2024'
+    source_citation: 'ADA Guidelines 2024',
+    scope: 'daily'
   },
   {
     id: 'diab_t2_gi_cap',
@@ -65,7 +67,8 @@ export const clinicalRules: ClinicalRule[] = [
     severity: 'severe',
     verdict: 'BLOCK',
     human_readable_text: 'Sodium must be strictly less than 2000mg per day for hypertension.',
-    source_citation: 'WHO <2000mg/day'
+    source_citation: 'WHO <2000mg/day',
+    scope: 'daily'
   },
   // CKD
   {
@@ -75,7 +78,8 @@ export const clinicalRules: ClinicalRule[] = [
     severity: 'severe',
     verdict: 'BLOCK',
     human_readable_text: 'Potassium restriction for Chronic Kidney Disease.',
-    source_citation: 'KDOQI Guidelines'
+    source_citation: 'KDOQI Guidelines',
+    scope: 'daily'
   },
   {
     id: 'ckd_phosphorus_cap',

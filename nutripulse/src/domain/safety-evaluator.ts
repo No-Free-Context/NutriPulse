@@ -2,7 +2,7 @@ import { Dish, UserProfile, LabReport, SafetyVerdict } from './types.js';
 import { clinicalRules } from './clinical-rules.js';
 import { INGREDIENT_ALLERGEN_MAP } from './allergen-map.js';
 
-export function evaluateDishSafety(dish: Dish, profile: UserProfile, latestLabs?: LabReport): SafetyVerdict[] {
+export function evaluateDishSafety(dish: Dish, profile: UserProfile, latestLabs?: LabReport, envelopeHardConstraints?: any[]): SafetyVerdict[] {
   const verdicts: SafetyVerdict[] = [];
   const userMeds = profile.medications.map(m => m.name.toLowerCase());
   const userConditions = profile.chronic_conditions.map(c => c.toLowerCase());
@@ -36,26 +36,50 @@ export function evaluateDishSafety(dish: Dish, profile: UserProfile, latestLabs?
     if (triggered && rule.constraint) {
       const constraint = rule.constraint;
       const nutrient = constraint.nutrient;
-      let actualValue = 0;
+      let actualValue: number | undefined = undefined;
+      
       if (nutrient in dish.macros) actualValue = (dish.macros as any)[nutrient];
       else if (nutrient in dish.micros) actualValue = (dish.micros as any)[nutrient];
       else if (nutrient === 'kcal') actualValue = dish.kcal;
 
+      if (actualValue === undefined || actualValue === null) {
+        verdicts.push({
+          status: rule.verdict, // WARN | BLOCK
+          rule_id: rule.id,
+          rule_text: `Missing data for nutrient: ${nutrient}`,
+          severity: rule.severity
+        });
+        continue;
+      }
+
+      let threshold = constraint.threshold;
+      // Daily-scoped nutrient caps only: evaluated against the envelope's converted per-meal thresholds.
+      if (rule.scope === 'daily' && envelopeHardConstraints) {
+        const envRule = envelopeHardConstraints.find(c => c.rule_id === rule.id);
+        if (envRule) {
+          threshold = envRule.threshold;
+        }
+      }
+
       let violated = false;
       switch (constraint.operator) {
-        case '>': violated = actualValue <= constraint.threshold; break;
-        case '<': violated = actualValue >= constraint.threshold; break;
-        case '>=': violated = actualValue < constraint.threshold; break;
-        case '<=': violated = actualValue > constraint.threshold; break;
-        case '==': violated = actualValue !== constraint.threshold; break;
+        case '>': violated = actualValue <= threshold; break;
+        case '<': violated = actualValue >= threshold; break;
+        case '>=': violated = actualValue < threshold; break;
+        case '<=': violated = actualValue > threshold; break;
+        case '==': violated = actualValue !== threshold; break;
       }
 
       if (violated) {
         verdicts.push({
           status: rule.verdict, // WARN | BLOCK
           rule_id: rule.id,
-          rule_text: rule.human_readable_text,
-          severity: rule.severity
+          rule_text: rule.scope === 'daily' && envelopeHardConstraints && envelopeHardConstraints.find(c => c.rule_id === rule.id) 
+            ? envelopeHardConstraints.find(c => c.rule_id === rule.id).human_readable_text 
+            : rule.human_readable_text,
+          severity: rule.severity,
+          actual_value: actualValue,
+          threshold: threshold
         });
       }
     }

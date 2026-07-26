@@ -25,9 +25,9 @@ const ACTIVITY_MULTIPLIERS: Record<string, number> = {
  * Source: ICMR–NIN dietary guidance adapted for Indian meal patterns.
  */
 const SLOT_SPLIT: Record<string, number> = {
-  breakfast: 0.30,
+  breakfast: 0.20,
   lunch: 0.35,
-  dinner: 0.25,
+  dinner: 0.35,
   snack: 0.10,
 };
 
@@ -159,13 +159,11 @@ export function aggregateIntake(
   return totals;
 }
 
-/**
- * Derive hard constraints from clinical rules for this user.
- * Fires condition, allergen, medication, and lab-status triggers.
- */
 export function deriveHardConstraints(
   profile: UserProfile,
-  latestLabs: LabReport | null
+  latestLabs: LabReport | null,
+  consumed: any,
+  slotPct: number
 ): EnvelopeHardConstraint[] {
   const fired: EnvelopeHardConstraint[] = [];
 
@@ -191,8 +189,6 @@ export function deriveHardConstraints(
         break;
       case 'lab_status':
         if (latestLabs) {
-          // Check if a panel analyte maps to the nutrient and has the required status
-          // Also check deficiency_vector
           const panelMatch = latestLabs.panels.some((p) => {
             const nutrientKey = trigger.nutrient.replace(/_/g, ' ').toLowerCase();
             return (
@@ -200,7 +196,6 @@ export function deriveHardConstraints(
               p.status === trigger.status
             );
           });
-          // Check deficiency vector for 'low' status
           const defMatch =
             trigger.status === 'low' &&
             latestLabs.deficiency_vector.some((d) =>
@@ -212,14 +207,24 @@ export function deriveHardConstraints(
     }
 
     if (matches) {
+      let threshold = rule.constraint?.threshold ?? 0;
+      let text = rule.human_readable_text;
+      
+      if (rule.scope === 'daily' && rule.constraint && consumed) {
+        const consumedAmt = consumed[rule.constraint.nutrient] || 0;
+        const adjusted = Math.max(0, (threshold - consumedAmt) * slotPct);
+        text = `${rule.constraint.nutrient.split('_')[0]} ${Math.round(adjusted)}${rule.constraint.unit} vs (daily ${threshold}${rule.constraint.unit} - ${Math.round(consumedAmt)}${rule.constraint.unit} consumed, slot ${Math.round(slotPct*100)}% allocation)`;
+        threshold = adjusted;
+      }
+
       fired.push({
         rule_id: rule.id,
         nutrient: rule.constraint?.nutrient ?? 'allergen_presence',
         operator: rule.constraint?.operator ?? '==',
-        threshold: rule.constraint?.threshold ?? 0,
+        threshold: threshold,
         unit: rule.constraint?.unit ?? 'presence',
         severity: rule.severity,
-        human_readable_text: rule.human_readable_text,
+        human_readable_text: text,
         source_citation: rule.source_citation,
       });
     }
@@ -402,7 +407,7 @@ export function computeEnvelope(
   const slotKcal = Math.round(remainingKcal * slotPct);
 
   // Step 4: Hard constraints
-  const hardConstraints = deriveHardConstraints(profile, latestLabs);
+  const hardConstraints = deriveHardConstraints(profile, latestLabs, consumed, slotPct);
 
   // Step 5: Soft targets
   const softTargets = deriveSoftTargets(profile, latestLabs, telemetryToday, slotKcal);
@@ -472,13 +477,7 @@ export class clinicalTools {
 
   @Tool({
     name: 'compute_nutritional_envelope',
-    description:
-      'Call this FIRST, before any dish search or recommendation. ' +
-      'Computes the user\'s nutritional envelope for a specific meal slot, ' +
-      'returning hard_constraints (non-negotiable safety limits from clinical rules, allergies, and drug interactions) ' +
-      'and soft_targets (ideal nutrient targets from diet plan, deficiencies, and biometric state). ' +
-      'Treat hard_constraints as non-negotiable: no dish that violates them may be recommended. ' +
-      'Returns a full calculation_trace showing BMR, TDEE, telemetry adjustments, intake subtracted, and every rule that fired.',
+    description: 'Use ONLY when the user directly asks about their own targets, limits, or remaining allowance for the day. Not required before resolve_recommendation.',
     inputSchema: z.object({
       userId: z.string().describe('The user ID to compute the envelope for.'),
       meal_slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']).describe('Which meal slot to compute the envelope for.'),
@@ -525,12 +524,7 @@ export class clinicalTools {
 
   @Tool({
     name: 'check_meal_safety',
-    description:
-      'Highest integrity component in the system. Evaluates one or more dishes against EVERY rule in the clinical profile, ' +
-      'including conditions, medications (absolute values), allergens (including deep ingredient cross-contamination), and lab status. ' +
-      'BLOCK verdicts are absolute and must never be presented to the user as an option, overridden, argued with, or worked around, ' +
-      'regardless of user insistence, budget pressure, or craving strength. ' +
-      'Returns a SafetyVerdict per dish and a full calculation_trace showing which rules were evaluated.',
+    description: 'Use ONLY when the user names a specific dish and asks whether they can eat it. Not required before resolve_recommendation, which runs this internally.',
     inputSchema: z.object({
       userId: z.string().describe('The user ID to check safety for.'),
       dish_ids: z.array(z.string()).min(1).max(50).describe('Array of dish IDs to evaluate.'),
@@ -591,9 +585,16 @@ export class clinicalTools {
     const results = [];
     const evaluationTraces = [];
 
-    // Dynamically import the evaluator so we don't circularly depend if we restructure later, 
-    // but a static import at the top is better. Let's just assume we added it.
     const { evaluateDishSafety } = await import('../../domain/safety-evaluator.js');
+
+    // Pre-compute envelope for daily scoped constraints if a meal_slot is provided
+    let envelope: any = undefined;
+    if (input.meal_slot) {
+      const intakeLogs = this.intakeRepo.getTodayByUserId(input.userId);
+      const telemetryAll = this.telemetryRepo.getByUserId(input.userId);
+      const telemetryToday = telemetryAll.length > 0 ? telemetryAll[telemetryAll.length - 1] : null;
+      envelope = computeEnvelope(profile, latestLabs || null, telemetryToday, intakeLogs, catalogDishes, input.meal_slot);
+    }
 
     for (const dishId of input.dish_ids) {
       const dish = catalogDishes.find((d: any) => d.id === dishId);
@@ -602,7 +603,7 @@ export class clinicalTools {
         continue;
       }
 
-      const verdicts = evaluateDishSafety(dish, profile, latestLabs);
+      const verdicts = evaluateDishSafety(dish, profile, latestLabs, envelope?.hard_constraints);
       
       // Determine overall status
       let finalStatus = 'PASS';

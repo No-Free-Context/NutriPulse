@@ -241,14 +241,7 @@ export class catalogTools {
 
   @Tool({
     name: 'search_catalog',
-    description:
-      'Search the food catalog by text query and/or structured filters. ' +
-      'Returns UNVALIDATED dish candidates — these have NOT been checked against the user\'s ' +
-      'clinical profile, allergies, or drug interactions. ' +
-      'You MUST pass every result through check_meal_safety before presenting it to the user. ' +
-      'Never show search results directly without safety validation. ' +
-      'If the search returns zero strict matches, the response will include near-miss results ' +
-      'with a relaxed_filters field explaining which constraints were loosened.',
+    description: 'LOW-LEVEL LOOKUP ONLY. Returns UNVALIDATED dishes with NO safety checking and NO clinical filtering. Never use this to make a recommendation — use resolve_recommendation. Use only when the user explicitly asks to browse a restaurant\'s menu or look up a specific dish.',
     inputSchema: SearchInputSchema,
   })
   async searchCatalog(
