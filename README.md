@@ -193,8 +193,6 @@ The NutriPulse agent operates through MCP prompts that orchestrate the tool pipe
    - **Financial Advisor**: States the user's budget position with exact rupee figures and weekly pacing analysis.
 4. **Presents the resolution**: Announces the winning dish, reads out the conflict log naming exactly what was sacrificed in real units, which alternative lost and why, and any dishes removed for safety. BLOCK verdicts are never hidden or argued with.
 
-![NutriPulse Agent Dashboard](docs/dashboard_agent.png)
-
 ---
 
 ## Detailed MCP Architecture
@@ -280,7 +278,9 @@ Designated healthy swaps (`swap_for` field) are guaranteed a minimum similarity 
 
 ## System Architecture
 
-![NutriPulse System Architecture](docs/system_architecture.png)
+<img width="2816" height="1536" alt="arch" src="https://github.com/user-attachments/assets/889c863f-6c8d-4c35-be76-b0ceb4a86fbd" />
+
+
 
 The architecture follows a layered design:
 
@@ -295,8 +295,6 @@ The architecture follows a layered design:
 ---
 
 ## Dashboard
-
-![NutriPulse Agent Dashboard](docs/dashboard_agent.png)
 
 The NutriPulse agent interface presents a unified view combining:
 
@@ -579,10 +577,6 @@ npm test
 
 ---
 
-## License
-
-Hackathon project -- Amrita University MCP Hackathon 2026.
-
----
-
 Built with NitroStack -- [docs.nitrostack.ai](https://docs.nitrostack.ai)
+
+© 2026 Nutripulse. All rights reserved
