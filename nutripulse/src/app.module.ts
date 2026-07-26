@@ -6,6 +6,7 @@ import { telemetryModule } from './modules/telemetry/telemetry.module.js';
 import { catalogModule } from './modules/catalog/catalog.module.js';
 import { contextModule } from './modules/context/context.module.js';
 import { resolverModule } from './modules/resolver/resolver.module.js';
+import { promptsModule } from './modules/prompts/prompts.module.js';
 import { SystemHealthCheck } from './health/system.health.js';
 
 /**
@@ -32,7 +33,8 @@ import { SystemHealthCheck } from './health/system.health.js';
     telemetryModule,
     catalogModule,
     contextModule,
-    resolverModule
+    resolverModule,
+    promptsModule
   ],
   providers: [
     // Health Checks

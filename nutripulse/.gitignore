@@ -60,3 +60,4 @@ tokens.json
 data/runtime/
 
 resolver_report.md
+.nitrostudio/
